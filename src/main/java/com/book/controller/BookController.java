@@ -16,83 +16,115 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.book.dao.BookDao;
+import com.book.exception.BookIdAlreadyExistsException;
+import com.book.exception.BookNotFoundException;
 import com.book.model.Book;
 
-/** The BookController class provides methods to get book details. */
-@RestController
+/** This {@link BookController} class to get book details. */
+
 @RequestMapping("/books")
+@RestController
 public class BookController {
 
+	/*
+	 * Book Repository
+	 */
 	@Autowired
 	private BookDao dao;
 
-	/** This PostMapping method creates a new book in the database. */
+	/** PostMapping creates a new book in the database. */
 	/**
-	 * @param books
-	 * @return book size
+	 * @param books details 
+	 * @return book status
+	 * @throws BookIdAlreadyExistsException 
 	 */
-	@PostMapping
-	public ResponseEntity<Book> createBook(@RequestBody Book book) {
+	@PostMapping()
+	public ResponseEntity<Book> createBook(@RequestBody Book book) throws BookIdAlreadyExistsException {
+		/*
+		 * Condition if true i.e a book with same id is already present in the database then,
+		 *  an exception will be thrown with response code and book id. 
+		 *  Else the book will be created.
+		 */
+		if(dao.findById(book.getBkid()).isPresent()) {
+			throw new BookIdAlreadyExistsException(book.getBkid(), new ResponseEntity<Book>(HttpStatus.NOT_ACCEPTABLE));
+		}
+
 		return new ResponseEntity<Book>(dao.save(book), HttpStatus.CREATED);
 	}
 
 	/**
-	 * This GetMapping method provides the list of all the books in the database.
+	 * GetMapping  provides the list of all the books in the database.
 	 */
 	/**
-	 * @return Book list
+	 * @return List of all books
 	 */
-	@GetMapping
+	@GetMapping()
 	public ResponseEntity<List<Book>> getAll() {
 		return new ResponseEntity<List<Book>>(dao.findAll(), HttpStatus.OK);
 	}
 
 	/**
-	 * This GetMapping method provides detail of an book with a particular id in the
+	 * GetMapping provides detail of an book with a particular id in the
 	 * database.
 	 */
 	/**
-	 * @param book id
-	 * @return book
+	 * @param Book id
+	 * @return Book with book id
 	 */
 	@GetMapping("/{id}")
-	public ResponseEntity<Book> getBookById(@PathVariable(value = "id") Integer bkid) {
+	public ResponseEntity<Book> getBookById(@PathVariable(value = "id") Integer bkid) throws BookNotFoundException {
 
-		Optional<Book> bk = dao.findById(bkid);
-
-		if (!bk.isPresent()) {
-			return ResponseEntity.notFound().build();
+		Optional<Book> book = dao.findById(bkid);
+		/*
+		 *  If the book with inputed book id is not present in the database an exception will be thrown with a message and response code. 
+		 *  If successful  book detail of the inputed book id will be shown in the screen.
+		 */
+		if (!book.isPresent()) {
+			throw new BookNotFoundException("Book Not Found",ResponseEntity.notFound().build());
 		} else {
-			return new ResponseEntity<Book>(bk.get(), HttpStatus.OK);
+			return new ResponseEntity<Book>(book.get(), HttpStatus.OK);
 		}
 	}
 
 	/**
-	 * This GetMapping method provides detail of an book with a particular book
+	 * GetMapping provides detail of an book with a particular book
 	 * rating in the database.
 	 */
 	/**
 	 * @param book rating
-	 * @return book
+	 * @return book with book rating
 	 */
 	@GetMapping("/bkrating/{rating}")
 	public ResponseEntity<List<Book>> getBookByRating(@PathVariable(value = "rating") Float bkrating) {
-		return new ResponseEntity<List<Book>>(dao.findByBkrating((Float) bkrating), HttpStatus.OK);
-	}
+		List<Book> book=dao.findByBkrating((Float) bkrating);
+		/*
+		 * If condition true, then BookNotFoundException is thrown,
+		 * Else the given book with the particular details is shown.
+		 */
+		if (book.isEmpty()) {
+			throw new BookNotFoundException("Book Not Found",ResponseEntity.notFound().build());
+		} else {
+			return new ResponseEntity<List<Book>>(book, HttpStatus.OK);
+		}}
 
 	/**
-	 * This DeleteMapping method delete an book with a particular id in the
+	 * DeleteMapping deletes a book with a particular id in the
 	 * database.
 	 */
 	/**
 	 * @param book id
+	 * @return status
 	 */
 	@DeleteMapping("/{id}")
 	public ResponseEntity<Book> deleteBook(@PathVariable(value = "id") Integer bkid) {
 
 		Optional<Book> book = dao.findById(bkid);
+		/*
+		 * If condition true, then BookNotFoundException is thrown,
+		 * Else the given book with the particular details is deleted from the database.
+		 */
 		if (!book.isPresent()) {
-			return ResponseEntity.notFound().build();
+			throw new BookNotFoundException("Book Not Found",ResponseEntity.notFound().build());
 		}
 		dao.deleteById(bkid);
 
@@ -100,18 +132,21 @@ public class BookController {
 	}
 
 	/**
-	 * This PutMapping method update the details of an book with a particular id in
+	 * PutMapping updates the details of an book with a particular id in
 	 * the database.
 	 */
 	/**
 	 * @param book id
-	 * @param book
-	 * @return updated book
+	 * @return book with updated details.
 	 */
 	@PutMapping("/{id}")
 	public ResponseEntity<Book> updateBook(@PathVariable(value = "id") Integer bkid, @RequestBody Book book) {
 		Optional<Book> dbBookOptional = dao.findById(bkid);
 
+		/*
+		 * If condition is true then the detail of the book are updated,
+		 * Else BookNotFoundException is thrown.
+		 */
 		if (dbBookOptional.isPresent()) {
 			Book dbBook = dbBookOptional.get();
 			dbBook.setBkname(book.getBkname());
@@ -120,25 +155,42 @@ public class BookController {
 			dbBook.setAuthor(book.getAuthor());
 			book = dao.save(dbBook);
 		} else {
-			book = dao.save(book);
+			throw new BookNotFoundException("Book Not Found",ResponseEntity.notFound().build());
+
 		}
+
+		// Updated Book
 		Book updateBook = dao.save(book);
 		return ResponseEntity.ok().body(updateBook);
 	}
 
 	/**
-	 * This GetMapping method provides detail of an book with book price less than
+	 * GetMapping  provides detail of an book with book price less than
 	 * and author rating greater than in the database.
+	 * 
+	 * eg:- book price than 1800 and author rating greater than 3.
+	 * 
 	 */
 	/**
-	 * @param book   price less than
+	 * @param book price less than
 	 * @param author rating greater than
-	 * @return book
+	 * @return book with book price less than and author rating greater than
 	 */
 	@GetMapping("/price/{price}/authorRating/{aurating}")
 	public ResponseEntity<List<Book>> getBookPriceLessThanAndAuthorRatingGreaterThan(
 			@PathVariable("price") Integer price, @PathVariable("aurating") Float aurating) {
+
 		List<Book> books = dao.findByPriceLessThanAndAuthorAuratingGreaterThan(price, aurating);
+		/*
+		 * If condition true, then BookNotFoundException is thrown,
+		 * Else the given book with the particular details is shown.
+		 */
+		if(books.isEmpty()) {
+			throw new BookNotFoundException("Book Not Found",ResponseEntity.notFound().build());
+		}
+
 		return new ResponseEntity<List<Book>>(books, HttpStatus.OK);
 	}
+
+
 }

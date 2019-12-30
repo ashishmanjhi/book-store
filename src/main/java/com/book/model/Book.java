@@ -9,48 +9,63 @@ import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 
+import lombok.ToString;
+
 
 /**
  * @author Ashish.manjhi
  *
+ *This {@link Book} class represents detail of the Book.
+ *
  */
 @Entity
 @Table(name="book", catalog = "book2")
+@ToString
 public class Book {
 	
-	/**Members of Book Model.*/
-	
+	//Book Id
 	@Id
 	@GeneratedValue(strategy=GenerationType.AUTO)
 	@Column(name = "bkid")
 	private int bkid;
 	
+	//Book Name
 	@NotNull
 	@Column(name = "bkname")
 	private String bkname;
 	
+	//Book Rating
 	@NotNull
 	@Column(name = "bkrating")
 	private float bkrating;
 	
+	//Book price
 	@NotNull
 	@Column(name = "price")
 	private int price;
 	
+	//Author Id
 	@ManyToOne
 	private Author author;
 	
+	
+	// ----------------
+    // - CONSTRUCTORS -
+    // ----------------
 
-	// Default Constructor
+	/**
+	 * Default Constructor for Book
+	 */
 	public Book() {}
 	
 	
-//Parameterized Constructor
 /**
- * @param bkid
- * @param bkname
- * @param bkrating
- * @param price
+ * Parameterized Constructor for Book
+ * 
+ * @param book id
+ * @param book name
+ * @param book rating
+ * @param book price
  * @param author
  */
 public Book(int bkid, @NotNull String bkname, @NotNull float bkrating, @NotNull int price, Author author) {
@@ -63,9 +78,10 @@ public Book(int bkid, @NotNull String bkname, @NotNull float bkrating, @NotNull 
 	}
 
 
+// -----------
+// - METHODS -
+// -----------
 
-/** Setters and Getters.*/
-	
 	/**
 	 * @return Book Id
 	 */
@@ -144,7 +160,10 @@ public Book(int bkid, @NotNull String bkname, @NotNull float bkrating, @NotNull 
 		this.author = author;
 	}
 	
-	// To String
+	 // -------------
+    // - TO STRING -
+    // -------------
+	
 	/**
 	 *
 	 */

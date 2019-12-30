@@ -14,42 +14,52 @@ import lombok.ToString;
 /**
  * @author Ashish.manjhi
  *
+ *This {@link Author} class represents detail of the Author.
+ *
  */
 @Entity
 @Table(name="author", catalog = "book2")
 @ToString
 public class Author {
 
-	/** members of author  model.*/
-
+	// Author ID
 	@Id
 	@GeneratedValue(strategy=GenerationType.AUTO)
 	@Column(name = "auid")
 	private int auid;
 
+	// Author Name
 	@NotNull
 	@Column(name = "auname")
 	private String auname;
 
+	// Author Age
 	@NotNull
 	@Column(name = "age")
 	private int age;
 
+	// Author Rating
 	@NotNull
 	@Column(name = "aurating")
 	private float aurating;
 
 
-	//Default Constructor
+	// ----------------
+    // - CONSTRUCTORS -
+    // ----------------
+	
+	/**
+	 * Default Constructor for Author
+	 */
 	public Author() {}
 
-
-	//Parameterized Constructor
 	/**
-	 * @param auid
-	 * @param auname
-	 * @param age
-	 * @param aurating
+	 * Parameterized Constructor for Author
+	 * 
+	 * @param author id
+	 * @param author name
+	 * @param author age
+	 * @param author rating
 	 */
 	public Author(int auid, @NotNull String auname, @NotNull int age, @NotNull float aurating) {
 		super();
@@ -59,9 +69,10 @@ public class Author {
 		this.aurating = aurating;
 	}
 
-
-	/** Setters and Getters  .*/
-
+     // -----------
+     // - METHODS -
+    // -----------
+	
 	/**
 	 * @return age of author
 	 */
@@ -124,6 +135,16 @@ public class Author {
 	public Author setAuid(int au_id) {
 		this.auid = au_id;
 		return this;
+	}
+	
+	 // -------------
+    // - TO STRING -
+    // -------------
+	
+	@Override
+	public String toString() {
+		return "Author [auid=" + auid + ", auname=" + auname + ", age=" + age + ", aurating=" + aurating + "]";
 	}	
+	
 
 }

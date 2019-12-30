@@ -16,9 +16,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.book.dao.AuthorDao;
+import com.book.exception.AuthorNotFoundException;
 import com.book.model.Author;
 
-/** The AuthorController class provides methods to get author details.*/
+/** This {@link AuthorController} class provides methods to get author details.*/
 /**
  * @author Ashish.manjhi
  *
@@ -27,24 +28,26 @@ import com.book.model.Author;
 @RestController
 public class AuthorController {
 
+	/*
+	 * Author Repository 
+	 */
 	@Autowired
 	private AuthorDao authordao;
 
 	/**
-	 * This GetMapping method provides the list of all the authors in the database.
-	 */
-	/**
-	 * @return author list
+	 * GetMapping provides the list of all the authors in the database.
+	 * 
+	 * @return List of all Authors
 	 */
 	@GetMapping
 	public ResponseEntity<List<Author>> getAll() {
 		return new ResponseEntity<List<Author>>(authordao.findAll(), HttpStatus.OK);
 	}
 
-	/** This PostMapping method creates a new author in the database. */
-	/**
-	 * @param author
-	 * @return author size
+	/** PostMapping  creates a new author in the database. 
+	 * 
+	 * @param Author details
+	 * @return Author Status
 	 */
 	@PostMapping
 	public ResponseEntity<Author> createAuthor(@RequestBody Author author) {
@@ -53,39 +56,46 @@ public class AuthorController {
 	}
 
 	/**
-	 * This GetMapping method provides detail of an author with a particular id in
+	 * GetMapping provides detail of an author with a particular id in
 	 * the database.
 	 */
 	/**
-	 * @param auid
-	 * @return author
+	 * @param Author ID
+	 * @return Author with the inputed Author ID
 	 */
 	@GetMapping("/{id}")
-	public ResponseEntity<Author> getAuthorById(@PathVariable(value = "id") Integer auid) {
+	public ResponseEntity<Author> getAuthorById(@PathVariable(value = "id") Integer id) {
 
-		Optional<Author> au = authordao.findById(auid);
+		Optional<Author> author = authordao.findById(id);
 
-		if (!au.isPresent()) {
-			return ResponseEntity.notFound().build();
+		/*
+		 * If condition true, then AuthorNotFoundException is thrown,
+		 * Else the given author with the particular details is shown.
+		 */
+		if (!author.isPresent()) {
+			throw new AuthorNotFoundException("Author Not Found",ResponseEntity.notFound().build());
 		} else {
-			return new ResponseEntity<Author>(au.get(), HttpStatus.OK);
+			return new ResponseEntity<Author>(author.get(), HttpStatus.OK);
 		}
 	}
 
 	/**
-	 * This DeleteMapping method delete an authors with a particular id in the
+	 * DeleteMapping deletes an author with a particular id in the
 	 * database.
-	 */
-	/**
+	 *
 	 * @param author id
-	 * @return remain author
+	 * @return status
 	 */
 	@DeleteMapping("/{id}")
 	public ResponseEntity<Author> deleteAuthor(@PathVariable(value = "id") Integer id) {
 
 		Optional<Author> auth = authordao.findById(id);
-		if (auth == null) {
-			return ResponseEntity.notFound().build();
+		/*
+		 * If condition true, then AuthorNotFoundException is thrown,
+		 * Else the given author with the particular details is Deleted from the database.
+		 */
+		if (!auth.isPresent()) {
+			throw new AuthorNotFoundException("Author Not Found",ResponseEntity.notFound().build());		
 		}
 		authordao.deleteById(id);
 
@@ -93,17 +103,20 @@ public class AuthorController {
 	}
 
 	/**
-	 * This PutMapping method update the details of an authors with a particular id
+	 * PutMapping updates the details of an author with a particular id
 	 * in the database.
-	 */
-	/**
-	 * @param author
+	 * 
+	 * 
 	 * @param author id
-	 * @return update author details
+	 * @return author with updated details
 	 */
 	@PutMapping("/{id}")
 	public ResponseEntity<Author> createOrUpdateAuthor(@RequestBody Author author, @PathVariable Integer id) {
 		Optional<Author> authorOptional = authordao.findById(id);
+		/*
+		 * If condition is true then the detail of the author are updated,
+		 * Else AuthorNotFoundException is thrown.
+		 */
 		if (authorOptional.isPresent()) {
 			Author dbAuthor = authorOptional.get();
 			dbAuthor.setAge(author.getAge());
@@ -112,7 +125,7 @@ public class AuthorController {
 			author = authordao.save(dbAuthor);
 
 		} else {
-			author = authordao.save(author);
+			throw new AuthorNotFoundException("Author Not Found",ResponseEntity.notFound().build());		
 		}
 		return new ResponseEntity<Author>(author, HttpStatus.OK);
 	}
